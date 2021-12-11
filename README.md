@@ -23,6 +23,10 @@ qualify for the final phase!
 
 - I assure no plagiarism has been done and the concept and code is completely mine. Only the information from [official battlesnake github](https://github.com/BattlesnakeOfficial/starter-snake-python) have been used to initialize the project.
 
+- [Beating the OSDG's Snake](https://play.battlesnake.com/g/f4f21e36-ea4c-41a2-ac99-52313fe9c34d/) (qualification to final phase)
+
+    ![Beating the OSDG's Snake](beat_osdg_snake.gif)
+
 ---
 
 # Mechanism & Working
