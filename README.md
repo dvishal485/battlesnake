@@ -11,7 +11,10 @@ The project of [battlesnake](https://play.battlesnake.com/) has been made for th
 Software Engineering
 Track 5
 
-A 3-day Battlesnake event where devs get to program their snakes to compete with each other and climb up the ladder. Here’s the kicker: they must also defeat OSDG’s snake to qualify for the final phase!
+A 3-day Battlesnake event where devs get to program their
+snakes to compete with each other and climb up the ladder.
+Here’s the kicker: they must also defeat OSDG’s snake to
+qualify for the final phase!
 ```
 
 - Team Name : `Alpha`
