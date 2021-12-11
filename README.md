@@ -7,6 +7,10 @@ Battlesnake instructions and code using Python
 
 The project of [battlesnake](https://play.battlesnake.com/) has been made for the [Open Tech Summit 2021](https://www.opentechsummit.info/) conducted by IIIT Hyderabad (OSDG Group)
 
+**Battlesnake Deployment URL :** https://battlesnake-one.vercel.app/
+
+**Battlesnake Profile :** https://play.battlesnake.com/u/dvishal485/alpha/
+
 ```
 Software Engineering
 Track 5
