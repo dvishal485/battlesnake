@@ -1,7 +1,14 @@
 import numpy as np
 from random import choice
 
+
 def global_variables(mode: str = "default"):
+    '''
+    This functions gives information on the gain and
+    loss behaviour for the battlesnake. Eg. - The gain
+    it will be having by eating a food item or the loss
+    it will be having if it hits other snake etc.
+    '''
     food_val = 3
     corner_val = -1
     food_surr_val = 2
@@ -19,6 +26,11 @@ def global_variables(mode: str = "default"):
 
 
 def generate_smart_move(data: dict, mode: str = "default") -> str:
+    '''
+    Generates the smartest move by identifying the
+    move with maximum profit ( or minimum loss ) by
+    evaluating the board
+    '''
     food_val, corner_val, food_surr_val, other_snake_damage_val, impossible, prioritize_food_row, prioritize_food_col = global_variables(
         mode)
     height = data["board"]["height"]
@@ -27,11 +39,15 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
     hazards = data["board"]["hazards"]
     snakes = data["board"]["snakes"]
     you = data["you"]
+    # Build board function builds a board matrix with all the given information
     board = build_board(height, width, food, hazards, snakes, you, mode)
+    # log the board matrix
     print(board.astype('int'))
-    # classify invalid move as -1000 (impossible)
+    # classify invalid move as an impossible move by making its value highly negative
+    # the value is stored in global variable as "impossible"
     x = you["head"]["x"]
     y = you["head"]["y"]
+    # get the 3x3 matrix around the head
     surr = surrSq(x, y, board)
     print(surr)
     surr[0][0] = - impossible
@@ -39,9 +55,15 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
     surr[1][1] = -impossible
     surr[0][2] = -impossible
     surr[2][2] = -impossible
+    # predict the moves with maximum profit/minimum loss
+    # ( move with most +ve value in the 3x3 matrix )
     result = np.where(surr == np.amax(surr))
     possibleMoves = []
     listOfCordinates = list(zip(result[0], result[1]))
+    # initialize "future" variable caz we will be predicting future
+    # Note : No ML/AI used, predicting future basically means
+    # predicting the next best move and identify if it's
+    # in our battlesnake's favour or not
     future = []
     for cord in listOfCordinates:
         if cord == (0, 1):
@@ -99,6 +121,7 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
             priority.append(pM)
         possibleMoves = priority
     except:
+        # never encountered this but just in case...
         print("Sad things happened while predicting future!")
     finally:
         move = choice(possibleMoves)
@@ -107,71 +130,79 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
 
 
 def surrSq(x: int, y: int, board):
+    '''
+    Gets the surrounding 3x3 board around the given
+    coordinate (x, y)
+    '''
     y = board.shape[1]-1-y
+    fakeError = "This is not an error, but I'm just taking advantage of errors!"
     arr = np.full(shape=(3, 3), fill_value=-1500)
+    # make sure indices are non negative as they will
+    # result to the some value accoridngly but I want
+    # to declare those entry as invalid
     try:
         if(y-1 < 0 or x-1 < 0):
-            raise "huehue"
+            raise fakeError
         f1 = board[y-1][x-1]
     except:
         f1 = -1500
 
     try:
         if(y < 0 or x-1 < 0):
-            raise "huehue"
+            raise fakeError
         f2 = board[y][x-1]
     except:
         f2 = -1500
 
     try:
         if(y+1 < 0 or x-1 < 0):
-            raise "huehue"
+            raise fakeError
         f3 = board[y+1][x-1]
     except:
         f3 = -1500
 
     try:
         if(y-1 < 0 or x < 0):
-            raise "huehue"
+            raise fakeError
         g1 = board[y-1][x]
     except:
         g1 = -1500
 
     try:
         if(y < 0 or x < 0):
-            raise "huehue"
+            raise fakeError
         g2 = board[y][x]
     except:
         g2 = -1500
 
     try:
         if(y+1 < 0 or x < 0):
-            raise "huehue"
+            raise fakeError
         g3 = board[y+1][x]
     except:
         g3 = -1500
 
     try:
         if(y-1 < 0 or x+1 < 0):
-            raise "huehue"
+            raise fakeError
         h1 = board[y-1][x+1]
     except:
         h1 = -1500
 
     try:
         if(y < 0 or x+1 < 0):
-            raise "huehue"
+            raise fakeError
         h2 = board[y][x+1]
     except:
         h2 = -1500
 
     try:
         if(y+1 < 0 or x+1 < 0):
-            raise "huehue"
+            raise fakeError
         h3 = board[y+1][x+1]
     except:
         h3 = -1500
-
+    # finally create the 3x3 matrix and return
     arr = np.array([
         [f1, f2, f3, ],
         [g1, g2, g3, ],
@@ -181,10 +212,16 @@ def surrSq(x: int, y: int, board):
 
 
 def build_board(height, width, food, hazards, snakes, you, mode):
+    '''
+    Takes in the information about the game and
+    generates a matrix ( numpy array ) for the
+    board containg the gain and loss information
+    at every point
+    '''
     food_val, corner_val, food_surr_val, other_snake_damage_val, impossible, prioritize_food_row, prioritize_food_col = global_variables(
         mode)
     board = np.ones((height, width))
-    # remove edge from priority
+    # remove edges from priority by lowering it's gain value
     board[0][:] = corner_val
     board[:][height-1] = corner_val
     for i in range(height):
