@@ -1,0 +1,293 @@
+import numpy as np
+from random import choice
+
+def global_variables(mode: str = "default"):
+    food_val = 3
+    corner_val = -1
+    food_surr_val = 2
+    other_snake_damage_val = 400
+    impossible = 1500
+    prioritize_food_row = False
+    prioritize_food_col = False
+    if(mode == "survival"):
+        prioritize_food_row = True
+        prioritize_food_col = True
+        corner_val = -2
+        food_val = 4
+        food_surr_val = 3
+    return (food_val, corner_val, food_surr_val, other_snake_damage_val, impossible, prioritize_food_row, prioritize_food_col)
+
+
+def generate_smart_move(data: dict, mode: str = "default") -> str:
+    food_val, corner_val, food_surr_val, other_snake_damage_val, impossible, prioritize_food_row, prioritize_food_col = global_variables(
+        mode)
+    height = data["board"]["height"]
+    width = data["board"]["width"]
+    food = data["board"]["food"]
+    hazards = data["board"]["hazards"]
+    snakes = data["board"]["snakes"]
+    you = data["you"]
+    board = build_board(height, width, food, hazards, snakes, you, mode)
+    print(board.astype('int'))
+    # classify invalid move as -1000 (impossible)
+    x = you["head"]["x"]
+    y = you["head"]["y"]
+    surr = surrSq(x, y, board)
+    print(surr)
+    surr[0][0] = - impossible
+    surr[2][0] = -impossible
+    surr[1][1] = -impossible
+    surr[0][2] = -impossible
+    surr[2][2] = -impossible
+    result = np.where(surr == np.amax(surr))
+    possibleMoves = []
+    listOfCordinates = list(zip(result[0], result[1]))
+    future = []
+    for cord in listOfCordinates:
+        if cord == (0, 1):
+            possibleMoves.append("up")
+            you["head"] = {"x": x, "y": y+1}
+            you["body"].append({"x": x, "y": y+1})
+            board = build_board(height, width, food,
+                                hazards, snakes, you, mode)
+            if(y != height-1):
+                futureSurr = surrSq(x, y+1, board)
+            else:
+                futureSurr = surrSq(x, y, board)
+            future.append(np.amax(futureSurr))
+        elif cord == (1, 2):
+            you["head"] = {"x": x+1, "y": y}
+            you["body"].append({"x": x+1, "y": y})
+            board = build_board(height, width, food,
+                                hazards, snakes, you, mode)
+            possibleMoves.append("right")
+            if(x != width-1):
+                futureSurr = surrSq(x+1, y, board)
+            else:
+                futureSurr = surrSq(x, y, board)
+            future.append(np.amax(futureSurr))
+        elif cord == (1, 0):
+            you["head"] = {"x": x-1, "y": y}
+            you["body"].append({"x": x-1, "y": y})
+            board = build_board(height, width, food,
+                                hazards, snakes, you, mode)
+            possibleMoves.append("left")
+            if x != 0:
+                futureSurr = surrSq(x-1, y, board)
+            else:
+                futureSurr = surrSq(x-1, y, board)
+            future.append(np.amax(futureSurr))
+        elif cord == (2, 1):
+            you["head"] = {"x": x, "y": y-1}
+            you["body"].append({"x": x, "y": y-1})
+            board = build_board(height, width, food,
+                                hazards, snakes, you, mode)
+            possibleMoves.append("down")
+            if y != 0:
+                futureSurr = surrSq(x, y-1, board)
+            else:
+                futureSurr = surrSq(x, y, board)
+            future.append(np.amax(futureSurr))
+    try:
+        # Predicting self future
+        future = np.array(future)
+        indices = np.array(np.where(future == np.amax(future)))
+        priority = []
+        for i in indices[0]:
+            i = int(i)
+            pM = possibleMoves[i]
+            priority.append(pM)
+        possibleMoves = priority
+    except:
+        print("Sad things happened while predicting future!")
+    finally:
+        move = choice(possibleMoves)
+        print(f"Moving {move}!")
+        return move
+
+
+def surrSq(x: int, y: int, board):
+    y = board.shape[1]-1-y
+    arr = np.full(shape=(3, 3), fill_value=-1500)
+    try:
+        if(y-1 < 0 or x-1 < 0):
+            raise "huehue"
+        f1 = board[y-1][x-1]
+    except:
+        f1 = -1500
+
+    try:
+        if(y < 0 or x-1 < 0):
+            raise "huehue"
+        f2 = board[y][x-1]
+    except:
+        f2 = -1500
+
+    try:
+        if(y+1 < 0 or x-1 < 0):
+            raise "huehue"
+        f3 = board[y+1][x-1]
+    except:
+        f3 = -1500
+
+    try:
+        if(y-1 < 0 or x < 0):
+            raise "huehue"
+        g1 = board[y-1][x]
+    except:
+        g1 = -1500
+
+    try:
+        if(y < 0 or x < 0):
+            raise "huehue"
+        g2 = board[y][x]
+    except:
+        g2 = -1500
+
+    try:
+        if(y+1 < 0 or x < 0):
+            raise "huehue"
+        g3 = board[y+1][x]
+    except:
+        g3 = -1500
+
+    try:
+        if(y-1 < 0 or x+1 < 0):
+            raise "huehue"
+        h1 = board[y-1][x+1]
+    except:
+        h1 = -1500
+
+    try:
+        if(y < 0 or x+1 < 0):
+            raise "huehue"
+        h2 = board[y][x+1]
+    except:
+        h2 = -1500
+
+    try:
+        if(y+1 < 0 or x+1 < 0):
+            raise "huehue"
+        h3 = board[y+1][x+1]
+    except:
+        h3 = -1500
+
+    arr = np.array([
+        [f1, f2, f3, ],
+        [g1, g2, g3, ],
+        [h1, h2, h3, ]]).T
+
+    return arr.astype('int')
+
+
+def build_board(height, width, food, hazards, snakes, you, mode):
+    food_val, corner_val, food_surr_val, other_snake_damage_val, impossible, prioritize_food_row, prioritize_food_col = global_variables(
+        mode)
+    board = np.ones((height, width))
+    # remove edge from priority
+    board[0][:] = corner_val
+    board[:][height-1] = corner_val
+    for i in range(height):
+        board[i][0] = corner_val
+        board[i][width-1] = corner_val
+    for i in food:
+        board[height - 1 - i["y"], i["x"]] += food_val
+        try:
+            board[height-1-i["y"]+1, i["x"]] += food_surr_val
+        except:
+            None
+        try:
+            board[height-1-i["y"]-1, i["x"]] += food_surr_val
+        except:
+            None
+        try:
+            board[height-1-i["y"], i["x"]+1] += food_surr_val
+        except:
+            None
+        try:
+            board[height-1-i["y"]+1, i["x"]+1] += food_surr_val
+        except:
+            None
+        try:
+            board[height-1-i["y"]-1, i["x"]+1] += food_surr_val
+        except:
+            None
+        try:
+            board[height-1-i["y"]-1, i["x"]-1] += food_surr_val
+        except:
+            None
+        try:
+            board[height-1-i["y"], i["x"]-1] += food_surr_val
+        except:
+            None
+        try:
+            board[height-1-i["y"]+1, i["x"]-1] += food_surr_val
+        except:
+            None
+        try:
+            board[height-1-i["y"], i["x"]] += food_surr_val
+        except:
+            None
+        if prioritize_food_col:
+            try:
+                for x in range(width):
+                    try:
+                        board[i["y"]][x] += food_surr_val-1
+                    except:
+                        print(f"Failed to prioritize ({x, i['y']})")
+            except:
+                print("Failed to prioritize food column")
+        if prioritize_food_row:
+            try:
+                for y in range(height):
+                    try:
+                        board[y][i["x"]] += food_surr_val-1
+                    except:
+                        print(f"Failed to prioritize ({i['x'], y})")
+            except:
+                print("Failed to prioritize food row")
+    for i in hazards:
+        board[height - 1 - i["y"], i["x"]] -= food_val
+    for snake in snakes:
+        # snake's head can be a potential danger in near future!
+        try:
+            board[height-1-snake["head"]["y"]+1,
+                  snake["head"]["x"]] -= food_val
+        except:
+            print("Can't remove future mishappenings!")
+        try:
+            board[height-1-snake["head"]["y"]-1,
+                  snake["head"]["x"]] -= food_val
+        except:
+            print("Can't remove future mishappenings!")
+        try:
+            board[height-1-snake["head"]["y"],
+                  snake["head"]["x"]+1] -= food_val
+        except:
+            print("Can't remove future mishappenings!")
+        try:
+            board[height-1-snake["head"]["y"],
+                  snake["head"]["x"]-1] -= food_val
+        except:
+            print("Can't remove future mishappenings!")
+        for i in snake["body"]:
+            board[height-1 - i["y"], i["x"]] -= other_snake_damage_val * 2.5
+            try:
+                board[height-1 - i["y"]+1, i["x"]] -= food_val-1
+            except:
+                None
+            try:
+                board[height-1 - i["y"]-1, i["x"]] -= food_val-1
+            except:
+                None
+            try:
+                board[height-1 - i["y"], i["x"]+1] -= food_val-1
+            except:
+                None
+            try:
+                board[height-1 - i["y"], i["x"]-1] -= food_val-1
+            except:
+                None
+    for i in you["body"]:
+        board[height-1 - i["y"], i["x"]] -= other_snake_damage_val+100
+    return board
