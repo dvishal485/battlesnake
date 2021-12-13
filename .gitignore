@@ -130,3 +130,6 @@ dmypy.json
 
 # Vercel
 .vercel
+
+# Testing files
+*.ipynb

@@ -13,7 +13,7 @@ def global_variables(mode: str = "default"):
     corner_val = -1
     food_surr_val = 2
     other_snake_damage_val = 400
-    impossible = 1500
+    impossible = 2000
     prioritize_food_row = False
     prioritize_food_col = False
     if(mode == "survival"):
@@ -49,7 +49,7 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
     y = you["head"]["y"]
     # get the 3x3 matrix around the head
     surr = surrSq(x, y, board)
-    print(surr)
+    print(f"\nSurrounding 3x3 board :\n{surr}")
     surr[0][0] = - impossible
     surr[2][0] = -impossible
     surr[1][1] = -impossible
@@ -64,7 +64,15 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
     # Note : No ML/AI used, predicting future basically means
     # predicting the next best move and identify if it's
     # in our battlesnake's favour or not
+
+    def surrMatrixMean(arr, value=-1700):
+        '''
+        Returns the mean of surrounding matrix excluding the outbounds
+        '''
+        return np.nanmean(np.where(arr == value, np.nan, arr))
+
     future = []
+    superFuture = []
     for cord in listOfCordinates:
         if cord == (0, 1):
             possibleMoves.append("up")
@@ -77,6 +85,7 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
             else:
                 futureSurr = surrSq(x, y, board)
             future.append(np.amax(futureSurr))
+            superFuture.append(surrMatrixMean(futureSurr))
         elif cord == (1, 2):
             you["head"] = {"x": x+1, "y": y}
             you["body"].append({"x": x+1, "y": y})
@@ -88,6 +97,7 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
             else:
                 futureSurr = surrSq(x, y, board)
             future.append(np.amax(futureSurr))
+            superFuture.append(surrMatrixMean(futureSurr))
         elif cord == (1, 0):
             you["head"] = {"x": x-1, "y": y}
             you["body"].append({"x": x-1, "y": y})
@@ -99,6 +109,7 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
             else:
                 futureSurr = surrSq(x-1, y, board)
             future.append(np.amax(futureSurr))
+            superFuture.append(surrMatrixMean(futureSurr))
         elif cord == (2, 1):
             you["head"] = {"x": x, "y": y-1}
             you["body"].append({"x": x, "y": y-1})
@@ -110,6 +121,7 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
             else:
                 futureSurr = surrSq(x, y, board)
             future.append(np.amax(futureSurr))
+            superFuture.append(surrMatrixMean(futureSurr))
     try:
         # Predicting self future
         future = np.array(future)
@@ -124,6 +136,21 @@ def generate_smart_move(data: dict, mode: str = "default") -> str:
         # never encountered this but just in case...
         print("Sad things happened while predicting future!")
     finally:
+        # After predicting the future predict the super-future
+        # to reduce the degree of randomness! super-future is
+        # just a name I made up for predicting a better future
+        try:
+            indices = np.array(np.where(superFuture == np.amax(superFuture)))
+            superPriority = []
+            for i in indices:
+                i = int(i)
+                pM = possibleMoves[i]
+                superPriority.append(pM)
+            possibleMoves = superPriority
+            print(
+                f"Future Prediction : {priority}\nSuperFuture Prediction : {superPriority}")
+        except:
+            print("Sad things happened while predicting super future!!")
         move = choice(possibleMoves)
         print(f"Moving {move}!")
         return move
@@ -136,7 +163,7 @@ def surrSq(x: int, y: int, board):
     '''
     y = board.shape[1]-1-y
     fakeError = "This is not an error, but I'm just taking advantage of errors!"
-    arr = np.full(shape=(3, 3), fill_value=-1500)
+    arr = np.full(shape=(3, 3), fill_value=-1700)
     # make sure indices are non negative as they will
     # result to the some value accoridngly but I want
     # to declare those entry as invalid
@@ -145,63 +172,63 @@ def surrSq(x: int, y: int, board):
             raise fakeError
         f1 = board[y-1][x-1]
     except:
-        f1 = -1500
+        f1 = -1700
 
     try:
         if(y < 0 or x-1 < 0):
             raise fakeError
         f2 = board[y][x-1]
     except:
-        f2 = -1500
+        f2 = -1700
 
     try:
         if(y+1 < 0 or x-1 < 0):
             raise fakeError
         f3 = board[y+1][x-1]
     except:
-        f3 = -1500
+        f3 = -1700
 
     try:
         if(y-1 < 0 or x < 0):
             raise fakeError
         g1 = board[y-1][x]
     except:
-        g1 = -1500
+        g1 = -1700
 
     try:
         if(y < 0 or x < 0):
             raise fakeError
         g2 = board[y][x]
     except:
-        g2 = -1500
+        g2 = -1700
 
     try:
         if(y+1 < 0 or x < 0):
             raise fakeError
         g3 = board[y+1][x]
     except:
-        g3 = -1500
+        g3 = -1700
 
     try:
         if(y-1 < 0 or x+1 < 0):
             raise fakeError
         h1 = board[y-1][x+1]
     except:
-        h1 = -1500
+        h1 = -1700
 
     try:
         if(y < 0 or x+1 < 0):
             raise fakeError
         h2 = board[y][x+1]
     except:
-        h2 = -1500
+        h2 = -1700
 
     try:
         if(y+1 < 0 or x+1 < 0):
             raise fakeError
         h3 = board[y+1][x+1]
     except:
-        h3 = -1500
+        h3 = -1700
     # finally create the 3x3 matrix and return
     arr = np.array([
         [f1, f2, f3, ],
@@ -291,22 +318,22 @@ def build_board(height, width, food, hazards, snakes, you, mode):
             board[height-1-snake["head"]["y"]+1,
                   snake["head"]["x"]] -= food_val
         except:
-            print("Can't remove future mishappenings!")
+            None
         try:
             board[height-1-snake["head"]["y"]-1,
                   snake["head"]["x"]] -= food_val
         except:
-            print("Can't remove future mishappenings!")
+            None
         try:
             board[height-1-snake["head"]["y"],
                   snake["head"]["x"]+1] -= food_val
         except:
-            print("Can't remove future mishappenings!")
+            None
         try:
             board[height-1-snake["head"]["y"],
                   snake["head"]["x"]-1] -= food_val
         except:
-            print("Can't remove future mishappenings!")
+            None
         for i in snake["body"]:
             board[height-1 - i["y"], i["x"]] -= other_snake_damage_val * 2.5
             try:
