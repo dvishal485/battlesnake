@@ -133,3 +133,4 @@ dmypy.json
 
 # Testing files
 *.ipynb
+telegram-bot-config.env
