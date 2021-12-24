@@ -31,6 +31,8 @@ qualify for the final phase!
 
     ![Beating the OSDG's Snake](beat_osdg_snake.gif)
 
+- Ranked `3rd` in the event 💯
+
 ---
 
 # Mechanism & Working
