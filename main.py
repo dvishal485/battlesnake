@@ -49,7 +49,7 @@ def handle_info():
         "author": "dvishal485",
         "color": "#3E338F",
         "head": "evil",
-        "tail": "bolt",
+        "tail": "flame",
     }
 
 
